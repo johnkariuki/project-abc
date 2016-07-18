@@ -1,0 +1,5 @@
+#npm packages
+node_modules
+
+#debug log
+npm-debug.log
