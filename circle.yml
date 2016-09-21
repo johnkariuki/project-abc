@@ -1,3 +1,32 @@
+machine:
+  environment:
+    PROJECT_ID: quotes-101
+    CLUSTER_NAME: quotes-cluster
+    CLOUDSDK_COMPUTE_ZONE: us-central1-a
+    PROJECT_POD_NAME: inspiring-quote
+
 test:
     override:
     - mocha
+
+dependencies:
+  pre:
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update --version 120.0.0
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update --version 120.0.0 kubectl
+    - echo $GCLOUD_SERVICE_KEY | base64 --decode -i > ${HOME}/gcloud-service-key.json
+    - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+    - sudo /opt/google-cloud-sdk/bin/gcloud config set project $PROJECT_ID
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet config set container/cluster $CLUSTER_NAME
+    - sudo /opt/google-cloud-sdk/bin/gcloud config set compute/zone ${CLOUDSDK_COMPUTE_ZONE}
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet container clusters get-credentials $CLUSTER_NAME
+    - sudo service docker start
+    - docker build -t us.gcr.io/${PROJECT_ID}/hello:$CIRCLE_SHA1 .
+    - docker tag us.gcr.io/${PROJECT_ID}/hello:$CIRCLE_SHA1 us.gcr.io/${PROJECT_ID}/hello:latest
+
+deployment:
+  prod:
+    branch: docker-gcp
+    commands:
+      - sudo /opt/google-cloud-sdk/bin/gcloud docker push us.gcr.io/${PROJECT_ID}/hello:$CIRCLE_SHA1
+      - sudo chown -R ubuntu:ubuntu /home/ubuntu/.kube
+      - kubectl set image deployment/quotes-deployment quotes-101=us.gcr.io/quotes-101/hello:$CIRCLE_SHA1

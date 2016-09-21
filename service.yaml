@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: quotes-service
+spec:
+  selector:
+    app: "quotes-101"
+  ports:
+    - protocol: "TCP"
+      port: 8080
+      targetPort: 8080
+      nodePort: 30080
+  type: LoadBalancer

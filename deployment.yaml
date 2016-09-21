@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: quotes-deployment
+  labels:
+    app: quotes-101
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: quotes-101
+    spec:
+      containers:
+        - name: quotes-101
+          image: us.gcr.io/quotes-101/hello:125db73a659d6ff38e724a8866ecb02e6250229f
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
